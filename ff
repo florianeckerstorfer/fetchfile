@@ -1,0 +1,38 @@
+<?php
+
+if (!isset($_SERVER['HOME']) || !$_SERVER['HOME']) {
+	die("Could not determine HOME directory. Sorry.");
+}
+if (!isset($_SERVER['PWD']) || !$_SERVER['PWD']) {
+	die("Could not determine WORKING directory. Sorry.");
+}
+
+$config_file = $_SERVER['HOME'] . '/.fetchfile';
+
+if (file_exists($config_file)) {
+	$config = json_decode(file_get_contents($config_file));
+}
+else {
+	die("Could not load configuration file. Please create " . $config_file . "\n");
+}
+
+if (isset($_SERVER['argv'][1]) && $_SERVER['argv'][1]) {
+	$package = $_SERVER['argv'][1];
+	$url = $config->$package;
+	$filename = substr($url, strrpos($url, '/')+1);
+	if (isset($_SERVER['argv'][2]) && $_SERVER['argv'][2]) {
+		$filename = $_SERVER['PWD'] . '/' . $_SERVER['argv'][2] . $filename;
+	}
+	else {
+		$filename = $_SERVER['PWD'] . '/' . $filename;
+	}
+	file_put_contents($filename, file_get_contents($url));
+	echo sprintf("Downloaded %s to \"%s\".\n", $package, str_replace($_SERVER['PWD'], '.', $filename));
+}
+else {
+	foreach ($config as $name => $url) {
+		echo sprintf("%s: %s\n", $name, $url);
+	}
+}
+
+exit(0);
